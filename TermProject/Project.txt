@@ -1,0 +1,38 @@
+Yes, that looks good!
+
+Thanks,
+Zane
+
+
+On Nov 24, 2019, at 1:50 PM, Lucas Gunnar Christensen <chris724@uwm.edu> wrote:
+ 
+Hello Prof. Zeyun Yu
+ 
+Here is my term project idea:
+ 
+1.) I want to do a 3D lighting project. -done
+2.) Any “.off” file will work with the program. 
+	--add a few different .off models to proj dir
+	--allow users to loop through models
+	--select specific model through menus
+3.) Users will be able to cycle through a list of models to look at in the light.
+	--^
+4.) The lights will be able to be moved and will change color. 
+	--add a few light sources
+	--add movement capability
+	--add change color ability
+	--stretch-goal-- add in light animation
+	---lights smoothly move and change colors
+	---separate menu options for moving and color change animation
+5.) The normal of each plane will be calculated to provide better lighting effects. 
+	--calculate normal of each plane/points of plane
+	--use this information with lighting
+6.) The camera will be able to be moved to see different angles of the model. 
+	--camera can be swiveled around the object for different view points
+7.) The project will utilize C++ and OpenGL for implementation. -done
+I am planning to do the project alone. Is this an appropriate idea for the term project?
+ 
+Regards,
+Lucas Christensen
+ 
+ 
