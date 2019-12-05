@@ -7,19 +7,19 @@
 #include <string.h>
 #include <memory.h>
 
-typedef struct {
+typedef struct FLTVECT {
 	float x;
 	float y;
 	float z;
 }FLTVECT;
 
-typedef struct {
+typedef struct INT3VECT {
 	int a;
 	int b;
 	int c;
 }INT3VECT;
 
-typedef struct {
+typedef struct SurFaceMesh {
 	int nv;
 	int nf;
 	FLTVECT *vertex;

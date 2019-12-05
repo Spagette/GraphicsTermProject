@@ -120,6 +120,9 @@
   <ItemGroup>
     <None Include="..\..\Graphics_Project_3\project3\inputmesh.off" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="Project.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
