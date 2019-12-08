@@ -119,6 +119,26 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Graphics_Project_3\project3\inputmesh.off" />
+    <None Include="Models\Apple.off" />
+    <None Include="Models\asu.off" />
+    <None Include="Models\dragon.off" />
+    <None Include="Models\goblet.off" />
+    <None Include="Models\head.off" />
+    <None Include="Models\heart.off" />
+    <None Include="Models\helm.off" />
+    <None Include="Models\house.off" />
+    <None Include="Models\king.off" />
+    <None Include="Models\klingon.off" />
+    <None Include="Models\mushroom.off" />
+    <None Include="Models\pear.off" />
+    <None Include="Models\r2.off" />
+    <None Include="Models\seashell.off" />
+    <None Include="Models\space_shuttle.off" />
+    <None Include="Models\space_station.off" />
+    <None Include="Models\Sword01.off" />
+    <None Include="Models\teapot.off" />
+    <None Include="Models\volks.off" />
+    <None Include="Models\x29_plane.off" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Project.txt" />
