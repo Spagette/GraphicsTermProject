@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string.h>
 #include <memory.h>
+#include <string>
 
 typedef struct FLTVECT {
 	float x;
@@ -14,10 +15,9 @@ typedef struct FLTVECT {
 }FLTVECT;
 
 typedef struct INT3VECT {
-	int a;
-	int b;
-	int c;
+	int vertex[30];
 }INT3VECT;
+//todo: change struct from 3 diff ints to array of ints to allow num of vertex >3 per face
 
 typedef struct SurFaceMesh {
 	int nv;
@@ -27,9 +27,10 @@ typedef struct SurFaceMesh {
 }SurFaceMesh;
 
 //additional functions
-SurFaceMesh parseOFF();
+SurFaceMesh parseOFF(const char *model);
 void createMenu();
-void menu(int val);
+void menuFunc(int val);
+void modelMenuFunc(int val);
 
 SurFaceMesh surfmesh;
 
@@ -54,6 +55,7 @@ float xdiff3 = 0.0f;
 
 //int for our menu
 int mainMenu;
+int modelMenu;
 //int to keep track of polygon mode (fill by default)
 int polygonMode = 1;
 
@@ -77,9 +79,9 @@ void drawMesh() {
 	glBegin(GL_TRIANGLES);
 	for (int f = 0; f < surfmesh.nf; ++f) {
 		//grab three vertex indecies for each face
-		int a = surfmesh.face[f].a;
-		int b = surfmesh.face[f].b;
-		int c = surfmesh.face[f].c;
+		int a = surfmesh.face[f].vertex[0];
+		int b = surfmesh.face[f].vertex[1];
+		int c = surfmesh.face[f].vertex[2];
 		glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
 		glVertex3f(surfmesh.vertex[b].x, surfmesh.vertex[b].y, surfmesh.vertex[b].z);
 		glVertex3f(surfmesh.vertex[c].x, surfmesh.vertex[c].y, surfmesh.vertex[c].z);
@@ -93,9 +95,9 @@ void drawMesh() {
 		glBegin(GL_TRIANGLES);
 		for (int f = 0; f < surfmesh.nf; ++f) {
 			//grab three vertex indecies for each face
-			int a = surfmesh.face[f].a;
-			int b = surfmesh.face[f].b;
-			int c = surfmesh.face[f].c;
+			int a = surfmesh.face[f].vertex[0];
+			int b = surfmesh.face[f].vertex[1];
+			int c = surfmesh.face[f].vertex[2];
 			glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
 			glVertex3f(surfmesh.vertex[b].x, surfmesh.vertex[b].y, surfmesh.vertex[b].z);
 			glVertex3f(surfmesh.vertex[c].x, surfmesh.vertex[c].y, surfmesh.vertex[c].z);
@@ -124,7 +126,7 @@ void display()
 
 	gluLookAt(
 		30.0f, 90.0f, 30.0f,
-		0.0f, 20.0f, 0.0f,
+		0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f);
 	//rotate
 	glRotatef(xrot, 1.0f, 0.0f, 0.0f);
@@ -147,7 +149,7 @@ void resize(int w, int h)
 
 	glViewport(0, 0, w, h);
 
-	gluPerspective(60.0f, 1.0f * w / h, 1.0f, 120.0f);
+	gluPerspective(60.0f, 1.0f * w / h, 1.0f, 360.0f);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -258,7 +260,7 @@ int main(int argc, char *argv[])
 	glutInit(&argc, argv);
 
 	//grab surface mesh parse
-	surfmesh = parseOFF();
+	surfmesh = parseOFF("space_shuttle.off");
 
 	glutInitWindowPosition(50, 50);
 	glutInitWindowSize(500, 500);
@@ -289,7 +291,31 @@ int main(int argc, char *argv[])
 //create menu
 void createMenu() {
 
-	mainMenu = glutCreateMenu(menu);
+	modelMenu = glutCreateMenu(modelMenuFunc);
+	glutAddMenuEntry("Brain", 0);
+	glutAddMenuEntry("Apple", 1);
+	glutAddMenuEntry("asu", 2);
+	glutAddMenuEntry("Dragon", 3);
+	glutAddMenuEntry("Goblet", 4);
+	glutAddMenuEntry("Head", 5);
+	glutAddMenuEntry("Heart", 6);
+	glutAddMenuEntry("Helm", 7);
+	glutAddMenuEntry("House", 8);
+	glutAddMenuEntry("King", 9);
+	glutAddMenuEntry("Klingon", 10);
+	glutAddMenuEntry("Mushroom", 11);
+	glutAddMenuEntry("Pear", 12);
+	glutAddMenuEntry("R2", 13);
+	glutAddMenuEntry("Seashell", 14);
+	glutAddMenuEntry("Space Shuttle", 15);
+	glutAddMenuEntry("Space Station", 16);
+	glutAddMenuEntry("Sword", 17);
+	glutAddMenuEntry("Teapot", 18);
+	glutAddMenuEntry("Volks", 19);
+	glutAddMenuEntry("X29 Plane", 20);
+
+	mainMenu = glutCreateMenu(menuFunc);
+	glutAddSubMenu("Models", modelMenu);
 	glutAddMenuEntry("POINT", 0);
 	glutAddMenuEntry("LINE", 1);
 	glutAddMenuEntry("FILL", 2);
@@ -301,7 +327,7 @@ void createMenu() {
 
 //menu function
 //polygonMode controls glPolygonMode
-void menu(int val) {
+void menuFunc(int val) {
 	switch (val) {
 	case 0:
 		polygonMode = 0;
@@ -322,7 +348,80 @@ void menu(int val) {
 	glutPostRedisplay();
 }
 
-SurFaceMesh parseOFF() {
+//model menu function
+void modelMenuFunc(int val) {
+	std::string filename;
+	switch (val) {
+	case 0:
+		filename = "inputmesh.off";
+		break;
+	case 1:
+		filename = "Apple.off";
+		break;
+	case 2:
+		filename = "asu.off";
+		break;
+	case 3:
+		filename = "dragon.off";
+		break;
+	case 4:
+		filename = "goblet.off";
+		break;
+	case 5:
+		filename = "head.off";
+		break;
+	case 6:
+		filename = "heart.off";
+		break;
+	case 7:
+		filename = "helm.off";
+		break;
+	case 8:
+		filename = "house.off";
+		break;
+	case 9:
+		filename = "king.off";
+		break;
+	case 10:
+		filename = "klingon.off";
+		break;
+	case 11:
+		filename = "mushroom.off";
+		break;
+	case 12:
+		filename = "pear.off";
+		break;
+	case 13:
+		filename = "r2.off";
+		break;
+	case 14:
+		filename = "seashell.off";
+		break;
+	case 15:
+		filename = "space_shuttle.off";
+		break;
+	case 16:
+		filename = "space_station.off";
+		break;
+	case 17:
+		filename = "Sword01.off";
+		break;
+	case 18:
+		filename = "teapot.off";
+		break;
+	case 19:
+		filename = "volks.off";
+		break;
+	case 20:
+		filename = "x29_plane.off";
+		break;
+	}
+	const char *filenamePointer = filename.c_str();
+	surfmesh = parseOFF(filenamePointer);
+	glutPostRedisplay();
+}
+
+SurFaceMesh parseOFF(const char* model) {
 	int num, n, m;
 	int a, b, c, d, e;
 	float x, y, z;
@@ -330,8 +429,7 @@ SurFaceMesh parseOFF() {
 	char line[256];
 	FILE *fin;
 
-
-	if ((fin = fopen("inputmesh.off", "r")) == NULL) {
+	if ((fin = fopen(model, "r")) == NULL) {
 		printf("read error...\n");
 		exit(0);
 	};
@@ -357,12 +455,29 @@ SurFaceMesh parseOFF() {
 	}
 
 	for (n = 0; n < surfmesh->nf; n++) {
+		//scan only num of vertex
+		//then for num of vertex, grab each vertex index individually
+		//scan a new line last
+
+		fscanf(fin, "%d", &a);
+		if (a > 30) {
+			printf("Error adding face(too many vertecies");
+		}
+		for (int vertNum = 0; vertNum < a; ++vertNum) {
+			fscanf(fin, "%d", &b);
+			surfmesh->face[n].vertex[vertNum] = b;
+		}
+		fscanf(fin, "\n");
+
+		/* old code
 		fscanf(fin, "%d %d %d %d\n", &a, &b, &c, &d);
-		surfmesh->face[n].a = b;
-		surfmesh->face[n].b = c;
-		surfmesh->face[n].c = d;
+		surfmesh->face[n].vertex[0] = b;
+		surfmesh->face[n].vertex[1] = c;
+		surfmesh->face[n].vertex[2] = d;
+		
 		if (a != 3)
 			printf("Errors: reading mesh .... \n");
+			*/
 	}
 	fclose(fin);
 
