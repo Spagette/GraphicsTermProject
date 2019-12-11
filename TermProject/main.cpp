@@ -16,6 +16,7 @@ typedef struct FLTVECT {
 
 typedef struct INT3VECT {
 	int vertex[30];
+	int count = 0;
 }INT3VECT;
 //todo: change struct from 3 diff ints to array of ints to allow num of vertex >3 per face
 
@@ -76,35 +77,43 @@ void drawMesh() {
 	}
 
 	glColor3f(0, 0, 1);
-	glBegin(GL_TRIANGLES);
 	for (int f = 0; f < surfmesh.nf; ++f) {
 		//grab three vertex indecies for each face
-		int a = surfmesh.face[f].vertex[0];
-		int b = surfmesh.face[f].vertex[1];
-		int c = surfmesh.face[f].vertex[2];
-		glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
-		glVertex3f(surfmesh.vertex[b].x, surfmesh.vertex[b].y, surfmesh.vertex[b].z);
-		glVertex3f(surfmesh.vertex[c].x, surfmesh.vertex[c].y, surfmesh.vertex[c].z);
+		//int a = surfmesh.face[f].vertex[0];
+		//int b = surfmesh.face[f].vertex[1];
+		//int c = surfmesh.face[f].vertex[2];
+		//glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
+		//glVertex3f(surfmesh.vertex[b].x, surfmesh.vertex[b].y, surfmesh.vertex[b].z);
+		//glVertex3f(surfmesh.vertex[c].x, surfmesh.vertex[c].y, surfmesh.vertex[c].z);
+		glBegin(GL_POLYGON);
+		for (int i = 0; i < surfmesh.face[f].count; ++i) {
+			int a = surfmesh.face[f].vertex[i];
+			glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
+		}
+		glEnd();
 	}
-	glEnd();
 
 	//draw again if fill and line selected
 	if (polygonMode == 3) {
 		glColor3f(1, 1, 1);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glBegin(GL_TRIANGLES);
+		
 		for (int f = 0; f < surfmesh.nf; ++f) {
 			//grab three vertex indecies for each face
-			int a = surfmesh.face[f].vertex[0];
-			int b = surfmesh.face[f].vertex[1];
-			int c = surfmesh.face[f].vertex[2];
-			glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
-			glVertex3f(surfmesh.vertex[b].x, surfmesh.vertex[b].y, surfmesh.vertex[b].z);
-			glVertex3f(surfmesh.vertex[c].x, surfmesh.vertex[c].y, surfmesh.vertex[c].z);
+			//int a = surfmesh.face[f].vertex[0];
+			//int b = surfmesh.face[f].vertex[1];
+			//int c = surfmesh.face[f].vertex[2];
+			//glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
+			//glVertex3f(surfmesh.vertex[b].x, surfmesh.vertex[b].y, surfmesh.vertex[b].z);
+			//glVertex3f(surfmesh.vertex[c].x, surfmesh.vertex[c].y, surfmesh.vertex[c].z);
+			glBegin(GL_POLYGON);
+			for (int i = 0; i < surfmesh.face[f].count; ++i) {
+				int a = surfmesh.face[f].vertex[i];
+				glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
+			}
+			glEnd();
 		}
 	}
-
-	glEnd();
 }
 
 bool init()
@@ -463,6 +472,7 @@ SurFaceMesh parseOFF(const char* model) {
 		if (a > 30) {
 			printf("Error adding face(too many vertecies");
 		}
+		surfmesh->face[n].count = a;
 		for (int vertNum = 0; vertNum < a; ++vertNum) {
 			fscanf(fin, "%d", &b);
 			surfmesh->face[n].vertex[vertNum] = b;
