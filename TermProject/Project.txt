@@ -1,9 +1,9 @@
-1.) I want to do a 3D lighting project. -done
-2.) Any “.off” file will work with the program.  -Lab10, Lab08
+1.) I want to do a 3D lighting project. -Done
+2.) Any “.off” file will work with the program.  -Lab10, Lab08 -Done
 	--add a few different .off models to proj dir 
 	--allow users to loop through models 
 	--select specific model through menus
-3.) Users will be able to cycle through a list of models to look at in the light.
+3.) Users will be able to cycle through a list of models to look at in the light. -Done
 	--^
 4.) The lights will be able to be moved and will change color. -Lab11,  Lab08
 	--add a few light sources
@@ -21,6 +21,8 @@
 	--lecture 23
 	--normal vector ex -Lab09
 8.) The project will utilize C++ and OpenGL for implementation. -done
+
+
  
  Lab01 - Creating a project
  Lab02 - 2d Polygon color shading

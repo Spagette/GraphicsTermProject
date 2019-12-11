@@ -41,24 +41,18 @@ bool mouseDown = false;
 //keep track of modifications
 float xrot = 0.0f;
 float yrot = 0.0f;
-float xtran = 0.0f;
-float ytran = 0.0f;
-float zoom = 1.0f;
 
 //decides whether we are rotating, scaling, translating ('r','s','t')
 char transMode = 'r';
 
 float xdiff = 0.0f;
 float ydiff = 0.0f;
-float xdiff2 = 0.0f;
-float ydiff2 = 0.0f;
-float xdiff3 = 0.0f;
 
 //int for our menu
 int mainMenu;
 int modelMenu;
 //int to keep track of polygon mode (fill by default)
-int polygonMode = 1;
+int polygonMode = 3;
 
 void drawMesh() {
 	switch (polygonMode) {
@@ -140,10 +134,6 @@ void display()
 	//rotate
 	glRotatef(xrot, 1.0f, 0.0f, 0.0f);
 	glRotatef(yrot, 0.0f, 1.0f, 0.0f);
-	//translate
-	glTranslatef(xtran, 0.0f, ytran);
-	//scale
-	glScalef(zoom, zoom, zoom);
 	//draw mesh (or OFF parse)
 	drawMesh();
 
@@ -185,9 +175,6 @@ void keyboard(unsigned char key, int x, int y)
 	case 'r':
 		transMode = 'r';
 		break;
-	case 's':
-		transMode = 's';
-		break;
 	case 27:
 		exit(1); break;
 	default:
@@ -221,11 +208,6 @@ void mouse(int button, int state, int x, int y)
 			xdiff = x - yrot;
 			ydiff = -y + xrot;
 			break;
-		case 't':
-			xdiff2 = x - ytran;
-			ydiff2 = -y + xtran;
-		case 's':
-			xdiff3 = x;
 		}
 	}
 	else
@@ -240,17 +222,6 @@ void mouseMotion(int x, int y)
 		case 'r':
 			yrot = x - xdiff;
 			xrot = y + ydiff;
-			break;
-		case 't':
-			xtran = x - xdiff2;
-			ytran = y + ydiff2;
-			break;
-		case 's':
-			zoom = ((float)x / (float)xdiff3);
-			if (zoom < 0.5f)
-				zoom = 0.5f;
-			if (zoom > 2.0f)
-				zoom = 2.0f;
 			break;
 		}
 		glutPostRedisplay();
