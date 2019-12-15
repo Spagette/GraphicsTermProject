@@ -17,6 +17,7 @@ typedef struct FLTVECT {
 typedef struct INT3VECT {
 	int vertex[30];
 	int count = 0;
+
 }INT3VECT;
 //todo: change struct from 3 diff ints to array of ints to allow num of vertex >3 per face
 
@@ -24,6 +25,7 @@ typedef struct SurFaceMesh {
 	int nv;
 	int nf;
 	FLTVECT *vertex;
+	int vertexCount = 0;
 	INT3VECT *face;
 }SurFaceMesh;
 
@@ -38,15 +40,29 @@ SurFaceMesh surfmesh;
 bool fullscreen = false;
 bool mouseDown = false;
 
-//keep track of modifications
-float xrot = 0.0f;
-float yrot = 0.0f;
+//keep track of camera rotation
+float xrot = 0.0f,
+yrot = 0.0f,
+xdiff = 0.0f,
+ydiff = 0.0f,
+xCamera=3, yCamera=0, zCamera=3;
 
-//decides whether we are rotating, scaling, translating ('r','s','t')
-char transMode = 'r';
+//lighting
+GLfloat lpos[] = {0, 2, 0, 1},
+ldir[] = {0,-1,0};
 
-float xdiff = 0.0f;
-float ydiff = 0.0f;
+//colors
+static GLfloat black[] = { 0.0, 0.0, 0.0, 1.0 };
+static GLfloat white[] = { 1.0, 1.0, 1.0, 1.0 };
+static GLfloat gray[] = { 0.5, 0.5, 0.5, 1.0 };
+static GLfloat red[] = { 1.0, 0.0, 0.0, 1.0 };
+static GLfloat green[] = { 0.0, 1.0, 0.0, 1.0 };
+static GLfloat blue[] = { 0.0, 0.0, 1.0, 1.0 };
+static GLfloat yellow[] = { 1.0, 1.0, 0.0, 1.0 };
+static GLfloat magenta[] = { 1.0, 0.0, 1.0, 1.0 };
+static GLfloat cyan[] = { 0.0, 1.0, 1.0, 1.0 };
+static GLfloat darkcyan[] = { 0.0, 0.4, 0.4, 1.0 };
+
 
 //int for our menu
 int mainMenu;
@@ -69,16 +85,10 @@ void drawMesh() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		break;
 	}
-
+	glShadeModel(GL_FLAT);
 	glColor3f(0, 0, 1);
 	for (int f = 0; f < surfmesh.nf; ++f) {
-		//grab three vertex indecies for each face
-		//int a = surfmesh.face[f].vertex[0];
-		//int b = surfmesh.face[f].vertex[1];
-		//int c = surfmesh.face[f].vertex[2];
-		//glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
-		//glVertex3f(surfmesh.vertex[b].x, surfmesh.vertex[b].y, surfmesh.vertex[b].z);
-		//glVertex3f(surfmesh.vertex[c].x, surfmesh.vertex[c].y, surfmesh.vertex[c].z);
+		//grab number of vertexes defined by face
 		glBegin(GL_POLYGON);
 		for (int i = 0; i < surfmesh.face[f].count; ++i) {
 			int a = surfmesh.face[f].vertex[i];
@@ -93,13 +103,7 @@ void drawMesh() {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		
 		for (int f = 0; f < surfmesh.nf; ++f) {
-			//grab three vertex indecies for each face
-			//int a = surfmesh.face[f].vertex[0];
-			//int b = surfmesh.face[f].vertex[1];
-			//int c = surfmesh.face[f].vertex[2];
-			//glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
-			//glVertex3f(surfmesh.vertex[b].x, surfmesh.vertex[b].y, surfmesh.vertex[b].z);
-			//glVertex3f(surfmesh.vertex[c].x, surfmesh.vertex[c].y, surfmesh.vertex[c].z);
+			//grab number of vertexes defined by face
 			glBegin(GL_POLYGON);
 			for (int i = 0; i < surfmesh.face[f].count; ++i) {
 				int a = surfmesh.face[f].vertex[i];
@@ -117,6 +121,9 @@ bool init()
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	glClearDepth(1.0f);
+	glEnable(GL_LIGHTING);
+	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+	glEnable(GL_LIGHT0);
 
 	return true;
 }
@@ -126,14 +133,38 @@ void display()
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
+	//camera
+	//calculate x,y,z for xrot yrot
+	if (xrot > 3.1414 / 2.1 * 100)
+		xrot = 3.1414 / 2.1 * 100;
+	if (xrot < -3.1414 / 2.1 * 100)
+		xrot = -3.1414 / 2.1 * 100;
+	xCamera = 3 * sin(yrot / 100);
+	yCamera = 3 * sin(xrot / 100);
+	zCamera = 3 * (cos(yrot / 100) * -cos(xrot / 100));
 
+	//eye-x,y,z;center-x,y,z;up-x,y,z;
+	//xCamera, yCamera, zCamera,
 	gluLookAt(
-		30.0f, 90.0f, 30.0f,
+		xCamera, yCamera, zCamera,
 		0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f);
-	//rotate
-	glRotatef(xrot, 1.0f, 0.0f, 0.0f);
-	glRotatef(yrot, 0.0f, 1.0f, 0.0f);
+	//end camera
+
+	//light
+	glLightfv(GL_LIGHT0, GL_POSITION, lpos);
+	glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, ldir);
+
+	//light as a sphere
+	glMaterialfv(GL_FRONT, GL_EMISSION, white);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glPushMatrix();
+	glTranslatef(lpos[0], lpos[1], lpos[2]);
+	glutSolidSphere(0.2, 10, 10);
+	glPopMatrix();
+	glMaterialfv(GL_FRONT, GL_EMISSION, black);
+	//end light
+	
 	//draw mesh (or OFF parse)
 	drawMesh();
 
@@ -148,33 +179,16 @@ void resize(int w, int h)
 
 	glViewport(0, 0, w, h);
 
-	gluPerspective(60.0f, 1.0f * w / h, 1.0f, 360.0f);
+	gluPerspective(40.0f, 1.0f * w / h, 1.0f, 5.0f);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-}
-
-void idle()
-{
-	if (!mouseDown)
-	{
-		xrot += 0.3f;
-		yrot += 0.4f;
-	}
-
-	glutPostRedisplay();
 }
 
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
-	case 't':
-		transMode = 't';
-		break;
-	case 'r':
-		transMode = 'r';
-		break;
 	case 27:
 		exit(1); break;
 	default:
@@ -203,12 +217,9 @@ void mouse(int button, int state, int x, int y)
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
 		mouseDown = true;
-		switch (transMode) {
-		case 'r':
-			xdiff = x - yrot;
-			ydiff = -y + xrot;
-			break;
-		}
+		xdiff = x - yrot;
+		ydiff = -y + xrot;
+		
 	}
 	else
 		mouseDown = false;
@@ -218,12 +229,8 @@ void mouseMotion(int x, int y)
 {
 	if (mouseDown)
 	{
-		switch (transMode) {
-		case 'r':
-			yrot = x - xdiff;
-			xrot = y + ydiff;
-			break;
-		}
+		yrot = x - xdiff;
+		xrot = y + ydiff;
 		glutPostRedisplay();
 	}
 }
@@ -232,22 +239,21 @@ int main(int argc, char *argv[])
 {
 	printf("\n\
    Right click to access the menu\n\
-	use mouse to modify the object \n\
-	press 't', 'r', or 's' to switch to translation, rotation, or scaling\n\
+	use mouse to move the camera\n\
 	press 'ESC' to exit\n\
    \n");
 
 	glutInit(&argc, argv);
 
 	//grab surface mesh parse
-	surfmesh = parseOFF("space_shuttle.off");
+	surfmesh = parseOFF("inputmesh.off");
 
 	glutInitWindowPosition(50, 50);
 	glutInitWindowSize(500, 500);
 
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
 
-	glutCreateWindow("13 - Solid Shapes");
+	glutCreateWindow("Term Project");
 
 	//create menu
 	createMenu();
@@ -401,6 +407,47 @@ void modelMenuFunc(int val) {
 	glutPostRedisplay();
 }
 
+void centerModel(SurFaceMesh *mesh) {
+	//todo
+	
+	float max = -1;
+	float ave[3] = {0, 0, 0};
+	int vertexCount = mesh->vertexCount;
+	//find absolute max of x,y,z
+	for (int v = 0; v < vertexCount; ++v) {//vertexes
+		float x = mesh->vertex[v].x,
+			  y = mesh->vertex[v].y,
+			  z = mesh->vertex[v].z;
+		ave[0] += x;
+		ave[1] += y;
+		ave[2] += z;
+		if (abs(x) > max)
+			max = abs(x);
+		if (abs(y) > max)
+			max = abs(y);
+		if (abs(z) > max)
+			max = abs(z);
+	}
+	//find average position of points in x,y,z
+	for (int d = 0; d < 3; ++d) {//directions
+		ave[d] = ave[d] / float(vertexCount);
+	}
+	//shift all x,y,z so average is on origin
+	//devide all x,y,z by max of respecting axis
+	for (int vert = 0; vert < vertexCount; ++vert) {
+		mesh->vertex[vert].x -= ave[0];
+		mesh->vertex[vert].y -= ave[1];
+		mesh->vertex[vert].z -= ave[2];
+		
+		mesh->vertex[vert].x = mesh->vertex[vert].x / max;
+		mesh->vertex[vert].y = mesh->vertex[vert].y / max;
+		mesh->vertex[vert].z = mesh->vertex[vert].z / max;
+	}
+
+	//object will be at most 1 big in each direction
+
+}
+
 SurFaceMesh parseOFF(const char* model) {
 	int num, n, m;
 	int a, b, c, d, e;
@@ -426,12 +473,13 @@ SurFaceMesh parseOFF(const char* model) {
 	surfmesh->nf = n;
 	surfmesh->vertex = (FLTVECT *)malloc(sizeof(FLTVECT)*surfmesh->nv);
 	surfmesh->face = (INT3VECT *)malloc(sizeof(INT3VECT)*surfmesh->nf);
-
+	surfmesh->vertexCount = 0;
 	for (n = 0; n < surfmesh->nv; n++) {
 		fscanf(fin, "%f %f %f\n", &x, &y, &z);
 		surfmesh->vertex[n].x = x;
 		surfmesh->vertex[n].y = y;
 		surfmesh->vertex[n].z = z;
+		surfmesh->vertexCount += 1;
 	}
 
 	for (n = 0; n < surfmesh->nf; n++) {
@@ -461,6 +509,6 @@ SurFaceMesh parseOFF(const char* model) {
 			*/
 	}
 	fclose(fin);
-
+	centerModel(surfmesh);
 	return *surfmesh;
 }

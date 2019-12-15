@@ -1,3 +1,6 @@
+--Current state--
+Normals for each face needs to be calculated for lighting to work correctly
+
 1.) I want to do a 3D lighting project. -Done
 2.) Any “.off” file will work with the program.  -Lab10, Lab08 -Done
 	--add a few different .off models to proj dir 
@@ -15,15 +18,21 @@
 5.) The normal of each plane will be calculated to provide better lighting effects. -Lab11
 	--calculate normal of each plane/points of plane
 	--use this information with lighting
-6.) The camera will be able to be moved to see different angles of the model. -Lab09
+6.) The camera will be able to be moved to see different angles of the model. -done
 	--camera can be swiveled around the object for different view points
-7.) implement different types of shading(Flat, Gouraud, Phong)
+7.) implement different types of shading(Flat, Gouraud, Phong) -lecture 23
 	--lecture 23
+	--https://uwmil.instructure.com/courses/210322/files/10735000?module_item_id=3715334
 	--normal vector ex -Lab09
 8.) The project will utilize C++ and OpenGL for implementation. -done
+9.) Object is in the middle of the screen and are scaled to the same size. -done
+	--hint
+	---find average position of points in x,y,z
+	---shift all x,y,z so average is on origin
+	---find absolute max of x,y,z
+	---devide all x,y,z by max of respecting axis
+	---object will be at most 1 big in each direction
 
-
- 
  Lab01 - Creating a project
  Lab02 - 2d Polygon color shading
  Lab03 - Keyboard input
