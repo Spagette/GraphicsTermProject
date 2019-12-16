@@ -1,5 +1,7 @@
 --Current state--
-Normals for each face needs to be calculated for lighting to work correctly
+want to make camera controls smoother
+-use polar coordinates(theta = yrot, phi = xrot or vice versa)
+make light movement more smooth/on one side of object
 
 4.) The lights will be able to be moved and will change color. -Lab11,  Lab08
 	--add a few light sources
