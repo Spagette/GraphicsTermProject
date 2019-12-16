@@ -12,12 +12,13 @@ typedef struct FLTVECT {
 	float x;
 	float y;
 	float z;
+	float normal[3];
 }FLTVECT;
 
 typedef struct INT3VECT {
 	int vertex[30];
 	int count = 0;
-
+	float normal[3];
 }INT3VECT;
 //todo: change struct from 3 diff ints to array of ints to allow num of vertex >3 per face
 
@@ -34,6 +35,10 @@ SurFaceMesh parseOFF(const char *model);
 void createMenu();
 void menuFunc(int val);
 void modelMenuFunc(int val);
+void animationMenuFunc(int val);
+void shiftColor();
+void shiftLight();
+void updateLightPos(GLfloat* currPos);
 
 SurFaceMesh surfmesh;
 
@@ -48,27 +53,57 @@ ydiff = 0.0f,
 xCamera=3, yCamera=0, zCamera=3;
 
 //lighting
-GLfloat lpos[] = {0, 2, 0, 1},
-ldir[] = {0,-1,0};
+GLfloat lpos[] = {0, 0, 0, 1},
+ldir[] = {0,0,0},
+lColorDiffuse[] = {1, 1, 1, 1};
+
+//Lighting positions in polar
+static GLfloat r = 3;//radius
+GLfloat pi = 3.14159265359;//angle to z axis
+GLfloat currPos[] = { pi, 0 };//theta to y, phi to z;
+GLfloat pos0[] = { 0, 0 };
+GLfloat pos1[] = { pi/2, 0 };
+GLfloat pos2[] = { pi/2, pi/2 };
+GLfloat pos3[] = { pi, pi };
+GLfloat pos4[] = { 3 * pi / 2, 7 * pi / 8 };
+GLfloat pos5[] = { 3 * pi / 2, 0 };
+GLfloat pos6[] = { 2, 3 };
+GLfloat pos7[] = { 1, 1 };
+GLfloat* positions[] = { pos0, pos1, pos2, pos3, pos4, pos5, pos6, pos7 };
+int nextPos = 0;
+float posIncrement = 0.01;
+
+//shading
+int shadeMode = 1;
+//0 = flat, 1 = Gouraud
+float specular[4] = { 0.2, 0.2, 0.2, 1 };
 
 //colors
-static GLfloat black[] = { 0.0, 0.0, 0.0, 1.0 };
+static GLfloat black[] = { 0,0,0,0 };
 static GLfloat white[] = { 1.0, 1.0, 1.0, 1.0 };
-static GLfloat gray[] = { 0.5, 0.5, 0.5, 1.0 };
 static GLfloat red[] = { 1.0, 0.0, 0.0, 1.0 };
+static GLfloat orange[] = { 1.0, 0.5, 0.0, 1.0 };
+static GLfloat yellow[] = { 1.0, 1.0, 0.0, 1.0 };
 static GLfloat green[] = { 0.0, 1.0, 0.0, 1.0 };
 static GLfloat blue[] = { 0.0, 0.0, 1.0, 1.0 };
-static GLfloat yellow[] = { 1.0, 1.0, 0.0, 1.0 };
-static GLfloat magenta[] = { 1.0, 0.0, 1.0, 1.0 };
 static GLfloat cyan[] = { 0.0, 1.0, 1.0, 1.0 };
-static GLfloat darkcyan[] = { 0.0, 0.4, 0.4, 1.0 };
+static GLfloat magenta[] = { 1.0, 0.0, 1.0, 1.0 };
+static GLfloat* colors[] = { white, red, orange, yellow, green, blue, cyan, magenta };
+int nextColor = 0;
+//0-7 depending on next color
+float colorIncrement = 0.01;
+//amount color values change per step
 
+//animation
+int animationMode = 0;
+//0 = none, 1 = light, 2 = color, 3 = light+color
 
 //int for our menu
 int mainMenu;
 int modelMenu;
+int animationMenu;
 //int to keep track of polygon mode (fill by default)
-int polygonMode = 3;
+int polygonMode = 2;
 
 void drawMesh() {
 	switch (polygonMode) {
@@ -81,36 +116,36 @@ void drawMesh() {
 	case 2:
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		break;
-	case 3:
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		break;
 	}
-	glShadeModel(GL_FLAT);
 	glColor3f(0, 0, 1);
+
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 100);
+
 	for (int f = 0; f < surfmesh.nf; ++f) {
 		//grab number of vertexes defined by face
 		glBegin(GL_POLYGON);
+
+		//shading mode
+		if (shadeMode == 0)
+			glShadeModel(GL_FLAT);
+		if(shadeMode == 1)
+			glShadeModel(GL_SMOOTH);
+
+		//flat shading
+		if (shadeMode == 0)
+			glNormal3fv(surfmesh.face[f].normal);
+
 		for (int i = 0; i < surfmesh.face[f].count; ++i) {
 			int a = surfmesh.face[f].vertex[i];
+			
+			//Gouraud shading
+			if(shadeMode == 1)
+				glNormal3fv(surfmesh.vertex[a].normal);
+
 			glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
 		}
 		glEnd();
-	}
-
-	//draw again if fill and line selected
-	if (polygonMode == 3) {
-		glColor3f(1, 1, 1);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		
-		for (int f = 0; f < surfmesh.nf; ++f) {
-			//grab number of vertexes defined by face
-			glBegin(GL_POLYGON);
-			for (int i = 0; i < surfmesh.face[f].count; ++i) {
-				int a = surfmesh.face[f].vertex[i];
-				glVertex3f(surfmesh.vertex[a].x, surfmesh.vertex[a].y, surfmesh.vertex[a].z);
-			}
-			glEnd();
-		}
 	}
 }
 
@@ -125,12 +160,14 @@ bool init()
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 	glEnable(GL_LIGHT0);
 
+	updateLightPos(currPos);
+
 	return true;
 }
 
 void display()
 {
-	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClearColor(0.1, 0.1, 0.1, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	//camera
@@ -153,23 +190,48 @@ void display()
 
 	//light
 	glLightfv(GL_LIGHT0, GL_POSITION, lpos);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, lColorDiffuse);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, lColorDiffuse);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, black);//remove ambient lighting for spotlight
+	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 60);
 	glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, ldir);
 
 	//light as a sphere
-	glMaterialfv(GL_FRONT, GL_EMISSION, white);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, lColorDiffuse);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glPushMatrix();
 	glTranslatef(lpos[0], lpos[1], lpos[2]);
 	glutSolidSphere(0.2, 10, 10);
 	glPopMatrix();
-	glMaterialfv(GL_FRONT, GL_EMISSION, black);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
 	//end light
 	
 	//draw mesh (or OFF parse)
+	glEnable(GL_NORMALIZE);
 	drawMesh();
 
 	glFlush();
 	glutSwapBuffers();
+	
+	//handle animation
+	switch (animationMode)
+	{
+	case 0:
+		break;
+	case 1:
+		shiftLight();
+		glutPostRedisplay();
+		break;
+	case 2:
+		shiftColor();
+		glutPostRedisplay();
+		break;
+	case 3:
+		shiftLight();
+		shiftColor();
+		glutPostRedisplay();
+		break;
+	}
 }
 
 void resize(int w, int h)
@@ -179,7 +241,7 @@ void resize(int w, int h)
 
 	glViewport(0, 0, w, h);
 
-	gluPerspective(40.0f, 1.0f * w / h, 1.0f, 5.0f);
+	gluPerspective(40.0f, 1.0f * w / h, 1.0f, 10.0f);
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -189,6 +251,22 @@ void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
+	case 'l':
+		animationMode = 1;
+		glutPostRedisplay();
+		break;
+	case 'c':
+		animationMode = 2;
+		glutPostRedisplay();
+		break;
+	case 'b':
+		animationMode = 3;
+		glutPostRedisplay();
+		break;
+	case 'n':
+		animationMode = 0;
+		glutPostRedisplay();
+		break;
 	case 27:
 		exit(1); break;
 	default:
@@ -276,6 +354,11 @@ int main(int argc, char *argv[])
 
 //create menu
 void createMenu() {
+	animationMenu = glutCreateMenu(animationMenuFunc);
+	glutAddMenuEntry("None", 0);
+	glutAddMenuEntry("Lights", 1);
+	glutAddMenuEntry("Color", 2);
+	glutAddMenuEntry("Both", 3);
 
 	modelMenu = glutCreateMenu(modelMenuFunc);
 	glutAddMenuEntry("Brain", 0);
@@ -302,11 +385,13 @@ void createMenu() {
 
 	mainMenu = glutCreateMenu(menuFunc);
 	glutAddSubMenu("Models", modelMenu);
+	glutAddSubMenu("Animation", animationMenu);
 	glutAddMenuEntry("POINT", 0);
 	glutAddMenuEntry("LINE", 1);
 	glutAddMenuEntry("FILL", 2);
-	glutAddMenuEntry("BOTH", 3);
-	glutAddMenuEntry("EXIT", 4);
+	glutAddMenuEntry("FLAT SHADING", 4);
+	glutAddMenuEntry("SMOOTH SHADING", 5);
+	glutAddMenuEntry("EXIT", 6);
 
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
@@ -324,10 +409,13 @@ void menuFunc(int val) {
 	case 2:
 		polygonMode = 2;
 		break;
-	case 3:
-		polygonMode = 3;
-		break;
 	case 4:
+		shadeMode = 0;
+		break;
+	case 5:
+		shadeMode = 1;
+		break;
+	case 6:
 		exit(0);
 		break;
 	}
@@ -407,6 +495,26 @@ void modelMenuFunc(int val) {
 	glutPostRedisplay();
 }
 
+void animationMenuFunc(int val) {
+	switch (val)
+	{
+	case 0:
+		animationMode = 0;
+		break;
+	case 1:
+		animationMode = 1;
+		break;
+	case 2:
+		animationMode = 2;
+		break;
+	case 3:
+		animationMode = 3;
+		break;
+	default:
+		break;
+	}
+}
+
 void centerModel(SurFaceMesh *mesh) {
 	//todo
 	
@@ -448,6 +556,58 @@ void centerModel(SurFaceMesh *mesh) {
 
 }
 
+void findNormals(SurFaceMesh *mesh) {
+	//calculate normal at each face --FOR FLAT
+	for (int face = 0; face < mesh->nf; ++face) {
+		//find 2 vertex
+		int vertNums[3] = { mesh->face[face].vertex[0],
+							mesh->face[face].vertex[1],
+							mesh->face[face].vertex[2] };
+		float v1[3] = {	mesh->vertex[vertNums[1]].x - mesh->vertex[vertNums[0]].x,
+						mesh->vertex[vertNums[1]].y - mesh->vertex[vertNums[0]].y,
+						mesh->vertex[vertNums[1]].z - mesh->vertex[vertNums[0]].z };
+		float v2[3] = { mesh->vertex[vertNums[2]].x - mesh->vertex[vertNums[0]].x,
+						mesh->vertex[vertNums[2]].y - mesh->vertex[vertNums[0]].y,
+						mesh->vertex[vertNums[2]].z - mesh->vertex[vertNums[0]].z };
+		mesh->face[face].normal[0] = v1[1] * v2[2] - v2[1] * v1[2];
+		mesh->face[face].normal[1] = -v1[0] * v2[2] + v2[0] * v1[2];
+		mesh->face[face].normal[2] = v1[0] * v2[1] - v2[0] * v1[1];
+	}
+	
+	//calculate normal at each vertex --FOR GAURAUDE
+		//use face normals to find vertex normals
+	int faces[200];
+	int faceCount = 0;
+	for (int vert = 0; vert < mesh->nv; ++vert) {//vert = current vert id
+		//find all faces using vertex
+			//weight by surface area
+		faceCount = 0;
+		for (int face = 0; face < mesh->nf; ++face) {//for faces
+			for (int faceVert = 0; faceVert < mesh->face[face].count; ++faceVert) {//for verts in face
+				if (mesh->face[face].vertex[faceVert] == vert) {
+					faces[faceCount] = face;
+					faceCount += 1;
+				}
+			}
+		}
+		//faces[] now has list of faces that use vertex
+		//average the normals to find vertex normal
+		float vertNormal[3] = {0,0,0};
+		for (int faceIndex = 0; faceIndex < faceCount; ++faceIndex) {
+			vertNormal[0] += mesh->face[faces[faceIndex]].normal[0];
+			vertNormal[1] += mesh->face[faces[faceIndex]].normal[1];
+			vertNormal[2] += mesh->face[faces[faceIndex]].normal[2];
+		}
+		vertNormal[0] = vertNormal[0] / faceCount;
+		vertNormal[1] = vertNormal[1] / faceCount;
+		vertNormal[2] = vertNormal[2] / faceCount;
+		mesh->vertex[vert].normal[0] = vertNormal[0];
+		mesh->vertex[vert].normal[1] = vertNormal[1];
+		mesh->vertex[vert].normal[2] = vertNormal[2];
+	}
+
+}
+
 SurFaceMesh parseOFF(const char* model) {
 	int num, n, m;
 	int a, b, c, d, e;
@@ -467,14 +627,14 @@ SurFaceMesh parseOFF(const char* model) {
 			break;
 	}
 	fscanf(fin, "%d %d %d\n", &m, &n, &num);
-
 	surfmesh = (SurFaceMesh*)malloc(sizeof(SurFaceMesh));
 	surfmesh->nv = m;
 	surfmesh->nf = n;
 	surfmesh->vertex = (FLTVECT *)malloc(sizeof(FLTVECT)*surfmesh->nv);
 	surfmesh->face = (INT3VECT *)malloc(sizeof(INT3VECT)*surfmesh->nf);
 	surfmesh->vertexCount = 0;
-	for (n = 0; n < surfmesh->nv; n++) {
+
+	for (n = 0; n < surfmesh->nv; n++) {//scan vertex
 		fscanf(fin, "%f %f %f\n", &x, &y, &z);
 		surfmesh->vertex[n].x = x;
 		surfmesh->vertex[n].y = y;
@@ -482,33 +642,80 @@ SurFaceMesh parseOFF(const char* model) {
 		surfmesh->vertexCount += 1;
 	}
 
-	for (n = 0; n < surfmesh->nf; n++) {
+	for (n = 0; n < surfmesh->nf; n++) {//scan faces
 		//scan only num of vertex
 		//then for num of vertex, grab each vertex index individually
 		//scan a new line last
-
 		fscanf(fin, "%d", &a);
 		if (a > 30) {
 			printf("Error adding face(too many vertecies");
 		}
 		surfmesh->face[n].count = a;
-		for (int vertNum = 0; vertNum < a; ++vertNum) {
+		for (int vertNum = 0; vertNum < a; ++vertNum) {//each face
 			fscanf(fin, "%d", &b);
 			surfmesh->face[n].vertex[vertNum] = b;
 		}
 		fscanf(fin, "\n");
-
-		/* old code
-		fscanf(fin, "%d %d %d %d\n", &a, &b, &c, &d);
-		surfmesh->face[n].vertex[0] = b;
-		surfmesh->face[n].vertex[1] = c;
-		surfmesh->face[n].vertex[2] = d;
-		
-		if (a != 3)
-			printf("Errors: reading mesh .... \n");
-			*/
 	}
 	fclose(fin);
 	centerModel(surfmesh);
+	findNormals(surfmesh);
 	return *surfmesh;
 }
+
+void shiftLight() {
+	bool changePos[] = { false, false };
+	for (int i = 0; i < 2; ++i) {
+		if (currPos[i] < positions[nextPos][i]) {
+			currPos[i] += posIncrement;
+		}
+		else {
+			currPos[i] -= posIncrement;
+		}
+		if (abs(currPos[i] - positions[nextPos][i]) <= posIncrement * 1.5) {
+			changePos[i] = true;
+		}
+	}
+	if (changePos[0] && changePos[1]) {
+		++nextPos;
+		if (nextPos > 7)
+			nextPos = 0;
+	}
+	updateLightPos(currPos);
+}
+
+//GLfloat currPos[] = { 0, 0 };//theta to y, phi to z;
+
+//GLfloat lpos[] = {0, 2, 0, 1},
+//ldir[] = { 0,-1,0 },
+void updateLightPos(GLfloat* currPos) {
+	//change theta, phi into x,y,z
+	lpos[0] = r * cos(currPos[1]) * sin(currPos[0]);
+	lpos[1] = r * sin(currPos[1]) * sin(currPos[0]);
+	lpos[2] = r * cos(currPos[0]);
+	//update ldir to point at origin
+	ldir[0] = -cos(currPos[1]) * sin(currPos[0]);
+	ldir[1] = -sin(currPos[1]) * sin(currPos[0]);
+	ldir[2] = -cos(currPos[0]);
+}
+
+void shiftColor() {
+	bool changeColor[] = { false, false, false };
+	for (int color = 0; color < 3; ++color) {//each color
+		if (lColorDiffuse[color] < colors[nextColor][color]) {//current color < wanted color
+			lColorDiffuse[color] += colorIncrement;
+		}
+		else {
+			lColorDiffuse[color] -= colorIncrement;
+		}
+		if (abs(lColorDiffuse[color] - colors[nextColor][color]) <= colorIncrement * 1.5) {
+			changeColor[color] = true;
+		}
+	}
+	if (changeColor[0] && changeColor[1] && changeColor[2]) {
+		++nextColor;
+		if (nextColor > 7)
+			nextColor = 0;
+	}
+}
+
