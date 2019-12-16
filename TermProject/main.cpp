@@ -61,12 +61,12 @@ lColorDiffuse[] = {1, 1, 1, 1};
 static GLfloat r = 3;//radius
 GLfloat pi = 3.14159265359;//angle to z axis
 GLfloat currPos[] = { pi, 0 };//theta to y, phi to z;
-GLfloat pos0[] = { 0, 0 };
-GLfloat pos1[] = { pi/2, 0 };
-GLfloat pos2[] = { pi/2, pi/2 };
-GLfloat pos3[] = { pi, pi };
-GLfloat pos4[] = { 3 * pi / 2, 7 * pi / 8 };
-GLfloat pos5[] = { 3 * pi / 2, 0 };
+GLfloat pos0[] = { pi, 0 };//front
+GLfloat pos1[] = { pi/2, 0 };//left
+GLfloat pos2[] = { pi/2, pi/2 };//bottom
+GLfloat pos3[] = { 3 * pi / 2, -1*pi/4 }; //
+GLfloat pos4[] = { 1.5 * pi / 2, 7 * pi / 8 };
+GLfloat pos5[] = { 2.222 * pi / 2, 0 };
 GLfloat pos6[] = { 2, 3 };
 GLfloat pos7[] = { 1, 1 };
 GLfloat* positions[] = { pos0, pos1, pos2, pos3, pos4, pos5, pos6, pos7 };
@@ -252,18 +252,22 @@ void keyboard(unsigned char key, int x, int y)
 	switch (key)
 	{
 	case 'l':
+	case 'L':
 		animationMode = 1;
 		glutPostRedisplay();
 		break;
 	case 'c':
+	case 'C':
 		animationMode = 2;
 		glutPostRedisplay();
 		break;
 	case 'b':
+	case 'B':
 		animationMode = 3;
 		glutPostRedisplay();
 		break;
 	case 'n':
+	case 'N':
 		animationMode = 0;
 		glutPostRedisplay();
 		break;
@@ -324,7 +328,7 @@ int main(int argc, char *argv[])
 	glutInit(&argc, argv);
 
 	//grab surface mesh parse
-	surfmesh = parseOFF("inputmesh.off");
+	surfmesh = parseOFF("seashell.off");
 
 	glutInitWindowPosition(50, 50);
 	glutInitWindowSize(500, 500);
@@ -386,9 +390,9 @@ void createMenu() {
 	mainMenu = glutCreateMenu(menuFunc);
 	glutAddSubMenu("Models", modelMenu);
 	glutAddSubMenu("Animation", animationMenu);
-	glutAddMenuEntry("POINT", 0);
-	glutAddMenuEntry("LINE", 1);
-	glutAddMenuEntry("FILL", 2);
+	//glutAddMenuEntry("POINT", 0);
+	//glutAddMenuEntry("LINE", 1);
+	//glutAddMenuEntry("FILL", 2);
 	glutAddMenuEntry("FLAT SHADING", 4);
 	glutAddMenuEntry("SMOOTH SHADING", 5);
 	glutAddMenuEntry("EXIT", 6);
@@ -500,15 +504,19 @@ void animationMenuFunc(int val) {
 	{
 	case 0:
 		animationMode = 0;
+		glutPostRedisplay();
 		break;
 	case 1:
 		animationMode = 1;
+		glutPostRedisplay();
 		break;
 	case 2:
 		animationMode = 2;
+		glutPostRedisplay();
 		break;
 	case 3:
 		animationMode = 3;
+		glutPostRedisplay();
 		break;
 	default:
 		break;

@@ -1,20 +1,15 @@
---Current state--
-want to make camera controls smoother
--use polar coordinates(theta = yrot, phi = xrot or vice versa)
-make light movement more smooth/on one side of object
-
-4.) The lights will be able to be moved and will change color. -Lab11,  Lab08
-	--add a few light sources
-	--add movement capability
-	--add change color ability - menu
-	--stretch-goal-- add in light animation
-	---lights smoothly move and change colors -glutTimerFunc
-	---separate menu options for moving and color change animation
 7.) implement different types of shading(Flat, Gouraud, Phong) -lecture 23
 	--lecture 23
 	--https://uwmil.instructure.com/courses/210322/files/10735000?module_item_id=3715334
 	--normal vector ex -Lab09
 
+4.) The lights will be able to be moved and will change color. -Lab11,  Lab08 -done
+--add a few light sources
+--add movement capability
+--add change color ability - menu
+--stretch-goal-- add in light animation
+---lights smoothly move and change colors -glutTimerFunc
+---separate menu options for moving and color change animation
 5.) The normal of each plane will be calculated to provide better lighting effects. -done
 	--calculate normal of each plane/points of plane
 	--use this information with lighting
