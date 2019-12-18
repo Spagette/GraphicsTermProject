@@ -53,18 +53,20 @@ ydiff = 0.0f,
 xCamera=3, yCamera=0, zCamera=3;
 
 //lighting
-GLfloat lpos[] = {0, 0, 0, 1},
-ldir[] = {0,0,0},
+GLfloat lpos[] = { 0, 0, 0, 1 },
+lpos2[] = { 0, 0, 0, 1 },
+ldir[] = {0, 0, 0},
+ldir2[] = {0, 0, 0},
 lColorDiffuse[] = {1, 1, 1, 1};
 
 //Lighting positions in polar
 static GLfloat r = 3;//radius
 GLfloat pi = 3.14159265359;//angle to z axis
-GLfloat currPos[] = { pi, 0 };//theta to y, phi to z;
-GLfloat pos0[] = { pi, 0 };//front
-GLfloat pos1[] = { pi/2, 0 };//left
-GLfloat pos2[] = { pi/2, pi/2 };//bottom
-GLfloat pos3[] = { 3 * pi / 2, -1*pi/4 }; //
+GLfloat currPos[] = { pi, 0 };
+GLfloat pos0[] = { pi, 0 };
+GLfloat pos1[] = { pi/2, 0 };
+GLfloat pos2[] = { pi/2, pi/2 };
+GLfloat pos3[] = { 3 * pi / 2, -1*pi/4 };
 GLfloat pos4[] = { 1.5 * pi / 2, 7 * pi / 8 };
 GLfloat pos5[] = { 2.222 * pi / 2, 0 };
 GLfloat pos6[] = { 2, 3 };
@@ -74,7 +76,7 @@ int nextPos = 0;
 float posIncrement = 0.01;
 
 //shading
-int shadeMode = 1;
+int shadeMode = 0;
 //0 = flat, 1 = Gouraud
 float specular[4] = { 0.2, 0.2, 0.2, 1 };
 
@@ -159,6 +161,7 @@ bool init()
 	glEnable(GL_LIGHTING);
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
 	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);
 
 	updateLightPos(currPos);
 
@@ -195,12 +198,25 @@ void display()
 	glLightfv(GL_LIGHT0, GL_AMBIENT, black);//remove ambient lighting for spotlight
 	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 60);
 	glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, ldir);
+	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 50.0);
+
+	glLightfv(GL_LIGHT1, GL_POSITION, lpos2);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, lColorDiffuse);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, lColorDiffuse);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, black);//remove ambient lighting for spotlight
+	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 60);
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, ldir2);
+	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 50.0);
 
 	//light as a sphere
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, lColorDiffuse);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glPushMatrix();
 	glTranslatef(lpos[0], lpos[1], lpos[2]);
+	glutSolidSphere(0.2, 10, 10);
+	glPopMatrix();
+	glPushMatrix();
+	glTranslatef(lpos2[0], lpos2[1], lpos2[2]);
 	glutSolidSphere(0.2, 10, 10);
 	glPopMatrix();
 	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, black);
@@ -395,7 +411,7 @@ void createMenu() {
 	//glutAddMenuEntry("FILL", 2);
 	glutAddMenuEntry("FLAT SHADING", 4);
 	glutAddMenuEntry("SMOOTH SHADING", 5);
-	glutAddMenuEntry("EXIT", 6);
+	glutAddMenuEntry("EXIT", 7);
 
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
@@ -419,7 +435,7 @@ void menuFunc(int val) {
 	case 5:
 		shadeMode = 1;
 		break;
-	case 6:
+	case 7:
 		exit(0);
 		break;
 	}
@@ -567,7 +583,7 @@ void centerModel(SurFaceMesh *mesh) {
 void findNormals(SurFaceMesh *mesh) {
 	//calculate normal at each face --FOR FLAT
 	for (int face = 0; face < mesh->nf; ++face) {
-		//find 2 vertex
+		//find 3 vertex => 2 vectors => cross product => Face's Normal
 		int vertNums[3] = { mesh->face[face].vertex[0],
 							mesh->face[face].vertex[1],
 							mesh->face[face].vertex[2] };
@@ -598,8 +614,8 @@ void findNormals(SurFaceMesh *mesh) {
 				}
 			}
 		}
-		//faces[] now has list of faces that use vertex
-		//average the normals to find vertex normal
+		//faces[] - list of faces using current vertex
+		// Find face normals => average of normals => vertex normal
 		float vertNormal[3] = {0,0,0};
 		for (int faceIndex = 0; faceIndex < faceCount; ++faceIndex) {
 			vertNormal[0] += mesh->face[faces[faceIndex]].normal[0];
@@ -701,10 +717,16 @@ void updateLightPos(GLfloat* currPos) {
 	lpos[0] = r * cos(currPos[1]) * sin(currPos[0]);
 	lpos[1] = r * sin(currPos[1]) * sin(currPos[0]);
 	lpos[2] = r * cos(currPos[0]);
+	lpos2[0] = -lpos[0];
+	lpos2[1] = -lpos[1];
+	lpos2[2] = -lpos[2];
 	//update ldir to point at origin
 	ldir[0] = -cos(currPos[1]) * sin(currPos[0]);
 	ldir[1] = -sin(currPos[1]) * sin(currPos[0]);
 	ldir[2] = -cos(currPos[0]);
+	ldir2[0] = -ldir[0];
+	ldir2[1] = -ldir[1];
+	ldir2[2] = -ldir[2];
 }
 
 void shiftColor() {
